@@ -48,6 +48,50 @@ export function EditBookmarkDialog({ bookmark, folders, open, onOpenChange, onSu
 
       const urlObj = new URL(normalizedUrl)
       const faviconUrl = `https://www.google.com/s2/favicons?domain=${urlObj.hostname}&sz=128`
+      
+      // 获取网站标题
+      try {
+        // 使用代理服务获取网页内容
+        const response = await fetch(`/api/proxy?url=${encodeURIComponent(normalizedUrl)}`)
+        if (response.ok) {
+          const data = await response.json()
+          console.log('Proxy API response:', data)
+          
+          if (data.title) {
+            console.log('Found site title:', data.title)
+            setTitle(data.title)
+          } else {
+            // 如果没有找到标题，使用域名生成
+            const hostname = urlObj.hostname.replace("www.", "")
+            const generatedTitle = hostname.split(".")[0]
+            const capitalizedTitle = generatedTitle.charAt(0).toUpperCase() + generatedTitle.slice(1)
+            console.log('Generated title from hostname:', capitalizedTitle)
+            setTitle(capitalizedTitle)
+          }
+          
+          // 如果代理API返回了图标，也使用它
+          if (data.icon) {
+            console.log('Found site icon:', data.icon)
+            setIcon(data.icon)
+          }
+        } else {
+          console.error('Proxy API failed:', response.status)
+          // 如果代理服务失败，使用域名生成标题
+          const hostname = urlObj.hostname.replace("www.", "")
+          const generatedTitle = hostname.split(".")[0]
+          const capitalizedTitle = generatedTitle.charAt(0).toUpperCase() + generatedTitle.slice(1)
+          console.log('Generated title from hostname (proxy failed):', capitalizedTitle)
+          setTitle(capitalizedTitle)
+        }
+      } catch (fetchError) {
+        console.error('Failed to fetch site title, using hostname:', fetchError)
+        // 如果获取失败，使用域名生成标题
+        const hostname = urlObj.hostname.replace("www.", "")
+        const generatedTitle = hostname.split(".")[0]
+        const capitalizedTitle = generatedTitle.charAt(0).toUpperCase() + generatedTitle.slice(1)
+        setTitle(capitalizedTitle)
+      }
+      
       setIcon(faviconUrl)
       setUrl(normalizedUrl)
     } catch (error) {

@@ -32,14 +32,14 @@ export function Time() {
   })
 
   return (
-    <div className="flex items-center gap-3 text-sm text-muted-foreground transition-all hover:text-foreground">
+    <div className="flex items-center gap-4 text-base text-muted-foreground transition-all hover:text-foreground">
       <div className="flex items-center gap-2">
-        <Clock className="h-5 w-5" />
-        <span className="font-medium">{formattedTime}</span>
+        <Clock className="h-6 w-6" />
+        <span className="font-mono text-lg">{formattedTime}</span>
       </div>
-      <div className="hidden sm:flex items-center gap-1">
-        <Calendar className="h-4 w-4" />
-        <span>{formattedDate}</span>
+      <div className="hidden sm:flex items-center gap-2">
+        <Calendar className="h-6 w-6" />
+        <span className="text-lg">{formattedDate}</span>
       </div>
     </div>
   )

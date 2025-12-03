@@ -27,78 +27,105 @@ export function SearchBar({ searchEngines, currentEngine, onEngineChange }: Sear
   }
 
   return (
-    <div className="max-w-6xl mx-auto mb-8 px-4">
-      <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
-        <Weather />
+    <div className="flex flex-col items-center mb-6">
+      {/* 时间和天气显示在搜索框上方 */}
+      <div className="flex items-center justify-center gap-8 mb-4">
         <Time />
+        <Weather />
       </div>
-      <form onSubmit={handleSearch} className="max-w-3xl mx-auto">
-        <div className="relative">
-          <div className="absolute -inset-0.5 gradient-bg rounded-full opacity-50 blur group-hover:opacity-75 transition"></div>
-          <div className="relative flex items-center bg-card rounded-full shadow-lg">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="absolute left-2 h-9 px-3 gap-1.5 text-muted-foreground hover:text-foreground rounded-full"
-                >
-                  {currentEngine?.icon ? (
-                    <img
-                      src={currentEngine.icon || "/placeholder.svg"}
-                      alt={currentEngine.name}
-                      className="h-4 w-4"
-                      onError={(e) => {
-                        ;(e.target as HTMLImageElement).style.display = "none"
-                      }}
-                    />
-                  ) : (
-                    <Search className="h-4 w-4" />
-                  )}
-                  <span className="text-sm hidden sm:inline">{currentEngine?.name || "搜索"}</span>
-                  <ChevronDown className="h-3 w-3" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-48">
-                {searchEngines.map((engine) => (
-                  <DropdownMenuItem key={engine.id} onClick={() => onEngineChange(engine)} className="gap-2">
-                    {engine.icon ? (
-                      <img
-                        src={engine.icon || "/placeholder.svg"}
-                        alt={engine.name}
-                        className="h-4 w-4"
-                        onError={(e) => {
-                          ;(e.target as HTMLImageElement).style.display = "none"
-                        }}
-                      />
-                    ) : (
-                      <Search className="h-4 w-4" />
-                    )}
-                    {engine.name}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-
+      
+      {/* 搜索框 */}
+      <div className="w-full max-w-2xl">
+        <form onSubmit={handleSearch} className="relative">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-6 w-6 text-primary" />
             <Input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="搜索你感兴趣的内容..."
-              className="h-14 pl-28 sm:pl-32 pr-14 text-lg rounded-full border-2 border-transparent focus-visible:ring-0 focus-visible:border-primary bg-transparent"
+              placeholder="搜索网页..."
+              className="w-full pl-10 pr-12 h-14 text-lg rounded-xl border-2 border-primary/20 bg-background/90 backdrop-blur-sm focus:border-primary focus:bg-background focus:shadow-lg focus:shadow-primary/20 transition-all duration-300"
             />
-
-            <Button
-              type="submit"
-              size="icon"
-              className="absolute right-2 h-10 w-10 rounded-full gradient-bg hover:opacity-90 transition-opacity"
-            >
-              <Search className="h-5 w-5 text-white" />
-              <span className="sr-only">搜索</span>
-            </Button>
+            <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
+              {searchEngines.length > 1 && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="h-8 w-24 border-0 bg-transparent hover:bg-primary/5 focus:ring-0 focus:ring-offset-0 text-xs"
+                    >
+                      {currentEngine?.icon ? (
+                        <img
+                          src={currentEngine.icon || "/placeholder.svg"}
+                          alt={currentEngine.name}
+                          className="h-4 w-4"
+                          crossOrigin="anonymous"
+                          referrerPolicy="no-referrer"
+                          onError={(e) => {
+                            ;(e.target as HTMLImageElement).style.display = "none"
+                            // 确保显示备用图标
+                            const nextSibling = (e.target as HTMLImageElement).nextElementSibling as HTMLElement
+                            if (nextSibling) {
+                              nextSibling.style.display = 'block'
+                            }
+                          }}
+                          onLoad={(e) => {
+                            // 图片加载成功时隐藏备用图标
+                            const nextSibling = (e.target as HTMLImageElement).nextElementSibling as HTMLElement
+                            if (nextSibling && nextSibling.tagName === 'svg'.toUpperCase()) {
+                              nextSibling.style.display = 'none'
+                            }
+                          }}
+                        />
+                      ) : (
+                        <Search className="h-4 w-4" />
+                      )}
+                      {/* 备用图标 - 初始隐藏 */}
+                      <Search className="h-4 w-4" style={{ display: currentEngine?.icon ? 'none' : 'block' }} />
+                      <span className="hidden sm:inline">{currentEngine?.name || "搜索"}</span>
+                      <ChevronDown className="h-3 w-3" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-36">
+                    {searchEngines.map((engine) => (
+                      <DropdownMenuItem key={engine.id} onClick={() => onEngineChange(engine)} className="gap-2">
+                        {engine.icon ? (
+                          <img
+                            src={engine.icon || "/placeholder.svg"}
+                            alt={engine.name}
+                            className="h-4 w-4"
+                            crossOrigin="anonymous"
+                            referrerPolicy="no-referrer"
+                            onError={(e) => {
+                              ;(e.target as HTMLImageElement).style.display = "none"
+                              const nextSibling = (e.target as HTMLImageElement).nextElementSibling as HTMLElement
+                              if (nextSibling) {
+                                nextSibling.style.display = 'block'
+                              }
+                            }}
+                            onLoad={(e) => {
+                              const nextSibling = (e.target as HTMLImageElement).nextElementSibling as HTMLElement
+                              if (nextSibling && nextSibling.tagName === 'svg'.toUpperCase()) {
+                                nextSibling.style.display = 'none'
+                              }
+                            }}
+                          />
+                        ) : (
+                          <Search className="h-4 w-4" />
+                        )}
+                        {/* 备用图标 - 初始隐藏 */}
+                        <Search className="h-4 w-4" style={{ display: engine.icon ? 'none' : 'block' }} />
+                        {engine.name}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
           </div>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
   )
 }

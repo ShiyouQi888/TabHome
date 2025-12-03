@@ -21,9 +21,16 @@ interface DashboardContentProps {
   user: User
 }
 
-const fetcher = async (key: string) => {
+const fetcher = async (key: string, userId?: string) => {
   const supabase = createClient()
-  const { data, error } = await supabase.from(key).select("*").order("position", { ascending: true })
+  let query = supabase.from(key).select("*").order("position", { ascending: true })
+  
+  // 对于需要用户过滤的表，添加用户ID条件
+  if (userId && (key === "bookmarks" || key === "folders" || key === "search_engines")) {
+    query = query.eq("user_id", userId)
+  }
+  
+  const { data, error } = await query
   if (error) throw error
   return data
 }
@@ -40,7 +47,7 @@ export function DashboardContent({ user }: DashboardContentProps) {
   const [currentSearchEngine, setCurrentSearchEngine] = useState<SearchEngine | null>(null)
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null)
 
-  const { data: bookmarks = [], error: bookmarksError, isLoading: bookmarksLoading, mutate: bookmarksMutate } = useSWR<Bookmark[]>("bookmarks", fetcher, { refreshInterval: 30000, revalidateOnFocus: true })
+  const { data: bookmarks = [], error: bookmarksError, isLoading: bookmarksLoading, mutate: bookmarksMutate } = useSWR<Bookmark[]>(["bookmarks", user.id], ([key, userId]) => fetcher(key, userId), { refreshInterval: 30000, revalidateOnFocus: true })
   
   // 检查书签数据中的图标信息
   useEffect(() => {
@@ -61,8 +68,8 @@ export function DashboardContent({ user }: DashboardContentProps) {
       console.log('=== END BOOKMARKS CHECK ===')
     }
   }, [bookmarks])
-  const { data: folders = [], isLoading: foldersLoading } = useSWR<Folder[]>("folders", fetcher)
-  const { data: searchEngines = [], isLoading: enginesLoading } = useSWR<SearchEngine[]>("search_engines", fetcher)
+  const { data: folders = [], isLoading: foldersLoading } = useSWR<Folder[]>(["folders", user.id], ([key, userId]) => fetcher(key, userId))
+  const { data: searchEngines = [], isLoading: enginesLoading } = useSWR<SearchEngine[]>(["search_engines", user.id], ([key, userId]) => fetcher(key, userId))
 
   // 计算每个分类的书签数量
   const bookmarkCounts = useMemo(() => {
@@ -80,21 +87,96 @@ export function DashboardContent({ user }: DashboardContentProps) {
     const initSearchEngines = async () => {
       if (!enginesLoading && searchEngines.length === 0) {
         const supabase = createClient()
-        const enginesToInsert = DEFAULT_SEARCH_ENGINES.map((engine, index) => ({
-          ...engine,
-          user_id: user.id,
-          position: index,
-        }))
-        await supabase.from("search_engines").insert(enginesToInsert)
-        mutate("search_engines")
+        
+        // 先检查是否已存在内置搜索引擎，避免重复插入
+        const { data: existingEngines } = await supabase
+          .from("search_engines")
+          .select("name, is_builtin")
+          .eq("user_id", user.id)
+          .eq("is_builtin", true)
+        
+        // 只插入不存在的内置搜索引擎
+        const existingBuiltinNames = existingEngines?.map(e => e.name) || []
+        const enginesToInsert = DEFAULT_SEARCH_ENGINES
+          .filter(engine => !existingBuiltinNames.includes(engine.name))
+          .map((engine, index) => ({
+            ...engine,
+            user_id: user.id,
+            position: index,
+          }))
+        
+        if (enginesToInsert.length > 0) {
+          await supabase.from("search_engines").insert(enginesToInsert)
+          mutate(["search_engines", user.id])
+        }
       }
     }
     initSearchEngines()
   }, [enginesLoading, searchEngines.length, user.id])
 
+  // 清理重复的搜索引擎
+  const cleanupDuplicateEngines = async () => {
+    try {
+      const supabase = createClient()
+      
+      // 获取所有搜索引擎
+      const { data: allEngines } = await supabase
+        .from("search_engines")
+        .select("id, name, user_id, is_builtin")
+        .eq("user_id", user.id)
+      
+      if (!allEngines || allEngines.length === 0) return
+      
+      // 按名称分组，找出重复的
+      const engineGroups: Record<string, typeof allEngines> = {}
+      allEngines.forEach(engine => {
+        if (!engineGroups[engine.name]) {
+          engineGroups[engine.name] = []
+        }
+        engineGroups[engine.name].push(engine)
+      })
+      
+      // 删除重复的，只保留每组第一个
+      const enginesToDelete: string[] = []
+      Object.values(engineGroups).forEach(group => {
+        if (group.length > 1) {
+          // 保留第一个，删除其余的
+          const [, ...duplicates] = group
+          enginesToDelete.push(...duplicates.map(e => e.id))
+        }
+      })
+      
+      if (enginesToDelete.length > 0) {
+        console.log(`发现 ${enginesToDelete.length} 个重复搜索引擎，正在清理...`)
+        await supabase.from("search_engines").delete().in("id", enginesToDelete)
+        mutate(["search_engines", user.id])
+        console.log("重复搜索引擎清理完成")
+      }
+    } catch (error) {
+      console.error("清理重复搜索引擎失败:", error)
+    }
+  }
+
   // 设置当前搜索引擎
   useEffect(() => {
     if (searchEngines.length > 0) {
+      console.log('=== SEARCH ENGINES DATA CHECK ===')
+      console.log('Total search engines:', searchEngines.length)
+      searchEngines.forEach((engine, index) => {
+        console.log(`Engine ${index}:`, {
+          id: engine.id,
+          name: engine.name,
+          is_builtin: engine.is_builtin,
+          is_default: engine.is_default,
+          url: engine.url,
+          user_id: engine.user_id
+        })
+      })
+      console.log('=== END SEARCH ENGINES CHECK ===')
+      
+      // 清理重复的搜索引擎
+      cleanupDuplicateEngines()
+      
       const defaultEngine = searchEngines.find((e) => e.is_default) || searchEngines[0]
       setCurrentSearchEngine(defaultEngine)
     }
@@ -111,7 +193,7 @@ export function DashboardContent({ user }: DashboardContentProps) {
     try {
       const supabase = createClient()
       await supabase.from("bookmarks").delete().eq("id", deletingBookmark.id)
-      mutate("bookmarks")
+      mutate(["bookmarks", user.id])
       setDeletingBookmark(null)
     } catch (error) {
       console.error("Failed to delete bookmark:", error)
@@ -134,8 +216,8 @@ export function DashboardContent({ user }: DashboardContentProps) {
       await supabase.from("bookmarks").update({ folder_id: null }).eq("folder_id", deletingFolder.id)
       // 删除分类
       await supabase.from("folders").delete().eq("id", deletingFolder.id)
-      mutate("bookmarks")
-      mutate("folders")
+      mutate(["bookmarks", user.id])
+      mutate(["folders", user.id])
       setDeletingFolder(null)
       if (selectedFolder === deletingFolder.id) {
         setSelectedFolder(null)
@@ -154,7 +236,7 @@ export function DashboardContent({ user }: DashboardContentProps) {
         .from("bookmarks")
         .update({ folder_id: folderId, updated_at: new Date().toISOString() })
         .eq("id", bookmark.id)
-      mutate("bookmarks")
+      mutate(["bookmarks", user.id])
     } catch (error) {
       console.error("Failed to move bookmark:", error)
     }
@@ -258,7 +340,7 @@ export function DashboardContent({ user }: DashboardContentProps) {
         userId={user.id}
         folders={folders}
         selectedFolder={selectedFolder}
-        onSuccess={() => mutate("bookmarks")}
+        onSuccess={() => mutate(["bookmarks", user.id])}
       />
 
       {editingBookmark && (
@@ -302,7 +384,7 @@ export function DashboardContent({ user }: DashboardContentProps) {
         userId={user.id}
         folder={editingFolder}
         onSuccess={() => {
-          mutate("folders")
+          mutate(["folders", user.id])
           setEditingFolder(null)
         }}
       />
@@ -312,7 +394,7 @@ export function DashboardContent({ user }: DashboardContentProps) {
         onOpenChange={setShowSearchEngineManager}
         searchEngines={searchEngines}
         userId={user.id}
-        onSuccess={() => mutate("search_engines")}
+        onSuccess={() => mutate(["search_engines", user.id])}
       />
     </div>
   )

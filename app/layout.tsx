@@ -12,6 +12,7 @@ export const metadata: Metadata = {
   title: "TabHome - 您的个性化浏览器主页",
   description: "功能强大的书签管理主页，支持自定义书签、多搜索引擎、云端同步",
   generator: "v0.app",
+  referrer: "no-referrer",
   icons: {
     icon: [
       {
