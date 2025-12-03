@@ -1,4 +1,6 @@
 import { Metadata } from 'next'
+import Link from 'next/link'
+import { ArrowLeft } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: '使用教程 - TabHome',
@@ -9,6 +11,17 @@ export default function TutorialPage() {
   return (
     <main className="container mx-auto px-4 py-12 max-w-4xl">
       <div className="space-y-12">
+        {/* Return Button */}
+        <div className="flex justify-start">
+          <Link 
+            href="/dashboard" 
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-border/50 text-sm text-muted-foreground hover:bg-primary hover:text-primary-foreground transition-all"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            返回首页
+          </Link>
+        </div>
+        
         {/* Hero Section */}
         <section className="text-center">
           <h1 className="text-3xl md:text-4xl font-bold mb-4">TabHome 使用教程</h1>
