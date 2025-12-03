@@ -72,7 +72,7 @@ export function BookmarkCard({ bookmark, folders, onEdit, onDelete, onMoveToFold
           <FolderInput className="mr-2 h-4 w-4" />
           移动到分类
         </DropdownMenuSubTrigger>
-        <DropdownMenuSubContent className="w-40">
+        <DropdownMenuSubContent className="w-48 max-h-60 overflow-y-auto">
           <DropdownMenuItem onClick={() => onMoveToFolder(null)}>
             <FolderIcon className="mr-2 h-4 w-4" />
             无分类
@@ -95,7 +95,7 @@ export function BookmarkCard({ bookmark, folders, onEdit, onDelete, onMoveToFold
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>
-        <div className="group relative flex flex-col items-center gap-2 p-4 rounded-2xl hover:bg-card hover:shadow-lg transition-all duration-300">
+        <div className="group relative flex flex-col items-center gap-2 p-2 transition-all duration-300 max-w-[120px]">
           {/* Category indicator */}
           {currentFolder && (
             <div
@@ -105,16 +105,16 @@ export function BookmarkCard({ bookmark, folders, onEdit, onDelete, onMoveToFold
             />
           )}
 
-          <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+          <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity z-10">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 bg-background/90 backdrop-blur-sm shadow-sm hover:bg-background"
+                  className="h-6 w-6 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background shadow-sm transition-all"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <MoreVertical className="h-4 w-4" />
+                  <MoreVertical className="h-3.5 w-3.5" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-44">
@@ -141,24 +141,24 @@ export function BookmarkCard({ bookmark, folders, onEdit, onDelete, onMoveToFold
             </DropdownMenu>
           </div>
 
-          <button onClick={handleClick} className="flex flex-col items-center gap-2 w-full">
-            <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-muted overflow-hidden shadow-md group-hover:shadow-xl group-hover:scale-105 transition-all duration-300">
+          <button onClick={handleClick} className="flex flex-col items-center gap-1.5 w-full">
+            <div className="relative flex h-14 w-14 items-center justify-center rounded-xl overflow-hidden shadow-sm dark:shadow-primary/5 group-hover:scale-105 group-hover:shadow-md dark:group-hover:shadow-primary/15 transition-all duration-300 bg-card/50 dark:bg-card/80 border border-border/30 dark:border-border/50">
               {bookmark.icon && !imageError ? (
                 <img
                   src={bookmark.icon || "/placeholder.svg"}
                   alt={bookmark.title}
-                  className="h-8 w-8 object-contain"
+                  className="h-9 w-9 object-contain"
                   onError={() => setImageError(true)}
                 />
               ) : (
                 <div
-                  className={`flex h-full w-full items-center justify-center text-white font-bold text-xl bg-gradient-to-br ${getGradientFromTitle(bookmark.title)}`}
+                  className={`flex h-full w-full items-center justify-center text-white font-semibold text-xl bg-gradient-to-br ${getGradientFromTitle(bookmark.title)}`}
                 >
                   {getInitials(bookmark.title)}
                 </div>
               )}
             </div>
-            <span className="text-xs text-center line-clamp-2 text-muted-foreground group-hover:text-foreground transition-colors max-w-full font-medium">
+            <span className="text-xs text-center line-clamp-2 text-foreground opacity-85 group-hover:opacity-100 transition-opacity max-w-[110px] font-medium">
               {bookmark.title}
             </span>
           </button>
@@ -179,7 +179,7 @@ export function BookmarkCard({ bookmark, folders, onEdit, onDelete, onMoveToFold
             <FolderInput className="mr-2 h-4 w-4" />
             移动到分类
           </ContextMenuSubTrigger>
-          <ContextMenuSubContent className="w-40">
+          <ContextMenuSubContent className="w-48 max-h-60 overflow-y-auto">
             <ContextMenuItem onClick={() => onMoveToFolder(null)}>
               <FolderIcon className="mr-2 h-4 w-4" />
               无分类

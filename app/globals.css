@@ -158,4 +158,122 @@
   .card-hover {
     @apply transition-all duration-300 hover:scale-105 hover:shadow-lg;
   }
+
+  /* 平滑过渡动画 */
+  .smooth-transition {
+    @apply transition-all duration-300 ease-in-out;
+  }
+
+  /* 淡入淡出动画 */
+  .fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+  }
+
+  .fade-out {
+    animation: fadeOut 0.5s ease-in-out;
+  }
+
+  /* 幻灯片动画 */
+  .slide-up {
+    animation: slideUp 0.5s ease-out;
+  }
+
+  .slide-down {
+    animation: slideDown 0.5s ease-out;
+  }
+
+  /* 缩放动画 */
+  .scale-in {
+    animation: scaleIn 0.4s ease-out;
+  }
+
+  /* 旋转动画 */
+  .rotate-in {
+    animation: rotateIn 0.5s ease-out;
+  }
+
+  /* 脉冲动画 */
+  .animate-pulse-slow {
+    animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+}
+
+/* 基础动画定义 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes rotateIn {
+  from {
+    opacity: 0;
+    transform: rotate(-10deg);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(0);
+  }
+}
+
+/* 为所有交互元素添加默认过渡 */
+@layer base {
+  button, a, input, select, textarea, .interactive {
+    @apply transition-all duration-200 ease-in-out;
+  }
+
+  /* 页面元素平滑过渡 */
+  .page-content {
+    @apply transition-opacity duration-500 ease-in-out;
+  }
+
+  /* 加载状态动画 */
+  .loading {
+    @apply animate-pulse;
+  }
 }

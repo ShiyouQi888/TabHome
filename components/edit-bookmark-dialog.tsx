@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Loader2, Wand2, FolderIcon } from "lucide-react"
+import { CustomIconEditor } from "@/components/custom-icon-editor"
 
 interface EditBookmarkDialogProps {
   bookmark: Bookmark
@@ -128,28 +129,56 @@ export function EditBookmarkDialog({ bookmark, folders, open, onOpenChange, onSu
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="edit-icon">图标 URL (可选)</Label>
-            <div className="flex gap-2 items-center">
-              <Input
-                id="edit-icon"
-                type="text"
-                placeholder="https://example.com/favicon.ico"
-                value={icon}
-                onChange={(e) => setIcon(e.target.value)}
-              />
-              {icon && (
-                <div className="flex-shrink-0 h-8 w-8 rounded border bg-muted flex items-center justify-center overflow-hidden">
-                  <img
-                    src={icon || "/placeholder.svg"}
-                    alt="Preview"
-                    className="h-6 w-6 object-contain"
-                    onError={(e) => {
-                      ;(e.target as HTMLImageElement).style.display = "none"
-                    }}
-                  />
+          {/* Custom Icon Editor */}
+          <div className="space-y-3">
+            <Label>图标设置</Label>
+            <div className="space-y-3">
+              {/* URL Input */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="edit-icon" className="text-sm">图标 URL (可选)</Label>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-sm"
+                    onClick={fetchSiteInfo}
+                    disabled={!url || isFetching}
+                  >
+                    {isFetching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
+                    <span className="ml-1">自动获取</span>
+                  </Button>
                 </div>
-              )}
+                <div className="flex gap-2 items-center">
+                  <Input
+                    id="edit-icon"
+                    type="text"
+                    placeholder="https://example.com/favicon.ico"
+                    value={icon}
+                    onChange={(e) => setIcon(e.target.value)}
+                  />
+                  {icon && (
+                    <div className="flex-shrink-0 h-8 w-8 rounded border bg-muted flex items-center justify-center overflow-hidden shadow-sm">
+                      <img
+                        src={icon || "/placeholder.svg"}
+                        alt="Preview"
+                        className="h-6 w-6 object-contain"
+                        onError={(e) => {
+                          ;(e.target as HTMLImageElement).style.display = "none"
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {/* Custom Icon Editor */}
+              <div className="pt-3 border-t border-border/30">
+                <CustomIconEditor 
+                  onIconChange={setIcon} 
+                  initialIcon={icon}
+                  initialTitle={title}
+                />
+              </div>
             </div>
           </div>
 

@@ -11,10 +11,13 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { Globe } from "lucide-react"
+import { Captcha } from "@/components/captcha"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [isCaptchaValid, setIsCaptchaValid] = useState(false)
+  const [agreeTerms, setAgreeTerms] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
@@ -76,19 +79,45 @@ export default function LoginPage() {
                       onChange={(e) => setPassword(e.target.value)}
                     />
                   </div>
+                  
+                  {/* Captcha */}
+                  <Captcha onVerify={setIsCaptchaValid} />
+                  
+                  {/* Terms Agreement */}
+                  <div className="flex items-start gap-2">
+                    <input
+                      id="terms"
+                      type="checkbox"
+                      required
+                      checked={agreeTerms}
+                      onChange={(e) => setAgreeTerms(e.target.checked)}
+                      className="mt-1 h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                    />
+                    <label htmlFor="terms" className="text-xs text-muted-foreground">
+                      登录即表示您同意我们的
+                      <Link href="/terms" className="text-primary hover:text-primary/80 underline underline-offset-2">
+                        使用条款
+                      </Link> 和 
+                      <Link href="/privacy" className="text-primary hover:text-primary/80 underline underline-offset-2">
+                        隐私政策
+                      </Link>
+                    </label>
+                  </div>
+                  
                   {error && <p className="text-sm text-destructive text-center">{error}</p>}
                   <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading ? "登录中..." : "登录"}
                   </Button>
                 </div>
                 <div className="mt-6 text-center text-sm">
-                  还没有账户？{" "}
-                  <Link
-                    href="/auth/sign-up"
-                    className="text-primary underline underline-offset-4 hover:text-primary/80"
-                  >
-                    立即注册
-                  </Link>
+                  还没有账户？{
+                    <Link
+                      href="/auth/sign-up"
+                      className="text-primary underline underline-offset-4 hover:text-primary/80"
+                    >
+                      立即注册
+                    </Link>
+                  }
                 </div>
               </form>
             </CardContent>

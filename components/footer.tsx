@@ -19,16 +19,19 @@ export function Footer() {
 
           {/* Links */}
           <div className="flex items-center gap-6 text-sm text-muted-foreground">
-            <a href="#" className="hover:text-foreground transition-colors">
+            <a href="/about" className="hover:text-foreground transition-colors">
               关于我们
             </a>
-            <a href="#" className="hover:text-foreground transition-colors">
+            <a href="/tutorial" className="hover:text-foreground transition-colors">
+              使用教程
+            </a>
+            <a href="/terms" className="hover:text-foreground transition-colors">
               使用条款
             </a>
-            <a href="#" className="hover:text-foreground transition-colors">
+            <a href="/privacy" className="hover:text-foreground transition-colors">
               隐私政策
             </a>
-            <a href="#" className="hover:text-foreground transition-colors flex items-center gap-1">
+            <a href="https://github.com/ShiyouQi888/TabHome" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors flex items-center gap-1">
               <Github className="h-4 w-4" />
               GitHub
             </a>

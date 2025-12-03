@@ -11,11 +11,14 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { Globe } from "lucide-react"
+import { Captcha } from "@/components/captcha"
 
 export default function SignUpPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
+  const [isCaptchaValid, setIsCaptchaValid] = useState(false)
+  const [agreeTerms, setAgreeTerms] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
@@ -34,6 +37,20 @@ export default function SignUpPage() {
 
     if (password.length < 6) {
       setError("密码至少需要6个字符")
+      setIsLoading(false)
+      return
+    }
+
+    // Validate captcha
+    if (!isCaptchaValid) {
+      setError("请先验证验证码")
+      setIsLoading(false)
+      return
+    }
+
+    // Validate terms agreement
+    if (!agreeTerms) {
+      setError("请同意用户协议和隐私政策")
       setIsLoading(false)
       return
     }
@@ -103,6 +120,31 @@ export default function SignUpPage() {
                       onChange={(e) => setConfirmPassword(e.target.value)}
                     />
                   </div>
+                  
+                  {/* Captcha */}
+                  <Captcha onVerify={setIsCaptchaValid} />
+                  
+                  {/* Terms Agreement */}
+                  <div className="flex items-start gap-2">
+                    <input
+                      id="terms"
+                      type="checkbox"
+                      required
+                      checked={agreeTerms}
+                      onChange={(e) => setAgreeTerms(e.target.checked)}
+                      className="mt-1 h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                    />
+                    <label htmlFor="terms" className="text-xs text-muted-foreground">
+                      注册即表示您同意我们的
+                      <Link href="/terms" className="text-primary hover:text-primary/80 underline underline-offset-2">
+                        使用条款
+                      </Link> 和 
+                      <Link href="/privacy" className="text-primary hover:text-primary/80 underline underline-offset-2">
+                        隐私政策
+                      </Link>
+                    </label>
+                  </div>
+                  
                   {error && <p className="text-sm text-destructive text-center">{error}</p>}
                   <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading ? "注册中..." : "注册"}

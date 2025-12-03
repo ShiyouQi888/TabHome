@@ -174,46 +174,46 @@ export function DashboardContent({ user }: DashboardContentProps) {
         onManageSearchEngines={() => setShowSearchEngineManager(true)}
       />
 
-      <main className="container mx-auto px-4 py-8 flex-1">
-        {/* Greeting */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">
-            <span className="gradient-text">{getGreeting()}</span>，{user.email?.split("@")[0]}
-          </h1>
-          <p className="text-muted-foreground">今天想做些什么？</p>
-        </div>
-
-        {/* Search Bar */}
-        <SearchBar
-          searchEngines={searchEngines}
-          currentEngine={currentSearchEngine}
-          onEngineChange={setCurrentSearchEngine}
-        />
-
-        {/* Mobile Category Tabs */}
-        <MobileCategoryTabs
+      <div className="flex flex-1 overflow-hidden">
+        {/* Category Sidebar (Desktop) - Fixed on left */}
+        <CategorySidebar
           folders={folders}
           selectedFolder={selectedFolder}
           onSelectFolder={setSelectedFolder}
           onAddFolder={handleAddFolder}
+          onEditFolder={handleEditFolder}
+          onDeleteFolder={handleDeleteFolderRequest}
+          bookmarkCounts={bookmarkCounts}
+          totalBookmarks={bookmarks.length}
         />
 
-        {/* Main Content with Sidebar */}
-        <div className="flex gap-8">
-          {/* Category Sidebar (Desktop) */}
-          <CategorySidebar
+        {/* Main Content Area */}
+        <main className="flex-1 overflow-y-auto p-4 md:p-6">
+          {/* Greeting */}
+          <div className="text-center mb-6 md:mb-10">
+            <h1 className="text-3xl md:text-4xl font-bold mb-2">
+              <span className="gradient-text">{getGreeting()}</span>，{user.email?.split("@")[0]}
+            </h1>
+            <p className="text-muted-foreground">今天想做些什么？</p>
+          </div>
+
+          {/* Search Bar */}
+          <SearchBar
+            searchEngines={searchEngines}
+            currentEngine={currentSearchEngine}
+            onEngineChange={setCurrentSearchEngine}
+          />
+
+          {/* Mobile Category Tabs */}
+          <MobileCategoryTabs
             folders={folders}
             selectedFolder={selectedFolder}
             onSelectFolder={setSelectedFolder}
             onAddFolder={handleAddFolder}
-            onEditFolder={handleEditFolder}
-            onDeleteFolder={handleDeleteFolderRequest}
-            bookmarkCounts={bookmarkCounts}
-            totalBookmarks={bookmarks.length}
           />
 
           {/* Bookmarks Grid */}
-          <div className="flex-1 min-w-0">
+          <div className="pt-6">
             <BookmarkGrid
               bookmarks={bookmarks}
               folders={folders}
@@ -225,8 +225,8 @@ export function DashboardContent({ user }: DashboardContentProps) {
               selectedFolder={selectedFolder}
             />
           </div>
-        </div>
-      </main>
+        </main>
+      </div>
 
       {/* Footer */}
       <Footer />
