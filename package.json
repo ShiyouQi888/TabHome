@@ -6,7 +6,11 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "eslint .",
-    "start": "next start"
+    "start": "next start",
+    "setup": "node scripts/create-env.js",
+    "setup:env": "node scripts/create-env.js",
+    "db:setup": "echo '请在 Supabase SQL Editor 中执行 scripts 目录下的 SQL 文件'",
+    "postinstall": "echo '安装完成！运行 npm run setup 开始配置项目'"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
