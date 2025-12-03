@@ -61,6 +61,15 @@ export function EditBookmarkDialog({ bookmark, folders, open, onOpenChange, onSu
     e.preventDefault()
     if (!url || !title) return
 
+    console.log('Submitting bookmark with icon:', icon)
+    console.log('Icon length:', icon?.length)
+    console.log('Icon type:', typeof icon)
+    
+    // 简单的图标数据验证
+    if (icon && icon.length > 10000) {
+      console.warn('Icon data is very large, might cause issues:', icon.length)
+    }
+    
     setIsLoading(true)
 
     try {
@@ -70,7 +79,14 @@ export function EditBookmarkDialog({ bookmark, folders, open, onOpenChange, onSu
       }
 
       const supabase = createClient()
-      const { error } = await supabase
+      
+      // 检查图标数据
+      console.log('About to update bookmark with icon data:')
+      console.log('Icon value:', icon)
+      console.log('Icon length:', icon?.length)
+      console.log('Is data URL:', icon?.startsWith('data:'))
+      
+      const { error, data } = await supabase
         .from("bookmarks")
         .update({
           url: normalizedUrl,
@@ -80,12 +96,18 @@ export function EditBookmarkDialog({ bookmark, folders, open, onOpenChange, onSu
           updated_at: new Date().toISOString(),
         })
         .eq("id", bookmark.id)
+        .select()
+        .single()
 
       if (error) throw error
 
+      console.log('Bookmark update successful, data:', data)
+      console.log('Updated icon from database:', data?.icon?.substring(0, 50))
+      console.log('Bookmark update successful, calling onSuccess')
       onSuccess()
     } catch (error) {
       console.error("Failed to update bookmark:", error)
+      console.error("Error details:", error.message, error.code, error.details)
     } finally {
       setIsLoading(false)
     }
@@ -174,7 +196,10 @@ export function EditBookmarkDialog({ bookmark, folders, open, onOpenChange, onSu
               {/* Custom Icon Editor */}
               <div className="pt-3 border-t border-border/30">
                 <CustomIconEditor 
-                  onIconChange={setIcon} 
+                  onIconChange={(newIcon) => {
+                    console.log('CustomIconEditor onIconChange called with:', newIcon)
+                    setIcon(newIcon)
+                  }} 
                   initialIcon={icon}
                   initialTitle={title}
                 />

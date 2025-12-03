@@ -160,8 +160,8 @@ export default function SignUpPage() {
             </CardContent>
           </Card>
           <p className="text-center text-sm text-muted-foreground">
-            <Link href="/" className="hover:text-foreground">
-              返回首页
+            <Link href="/about" className="hover:text-foreground">
+              关于我们
             </Link>
           </p>
         </div>

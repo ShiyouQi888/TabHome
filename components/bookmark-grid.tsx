@@ -35,6 +35,22 @@ export function BookmarkGrid({
 
   const filteredBookmarks = selectedFolder ? bookmarks.filter((b) => b.folder_id === selectedFolder) : bookmarks
 
+  console.log('Rendering BookmarkGrid with bookmarks:', bookmarks.length)
+  console.log('Filtered bookmarks:', filteredBookmarks.length)
+  console.log('Selected folder:', selectedFolder)
+  
+  // 详细检查每个书签的图标数据
+  filteredBookmarks.forEach((bookmark, index) => {
+    console.log(`Bookmark ${index}:`, {
+      id: bookmark.id,
+      title: bookmark.title,
+      hasIcon: !!bookmark.icon,
+      iconLength: bookmark.icon?.length,
+      iconPreview: bookmark.icon?.substring(0, 100),
+      isDataUrl: bookmark.icon?.startsWith('data:')
+    })
+  })
+
   if (filteredBookmarks.length === 0) {
     const currentFolder = folders.find((f) => f.id === selectedFolder)
     return (
@@ -77,16 +93,20 @@ export function BookmarkGrid({
       </div>
 
       <div className="grid grid-cols-[repeat(auto-fill,minmax(120px,1fr))] gap-5 md:gap-6 justify-items-center">
-        {filteredBookmarks.map((bookmark) => (
-          <BookmarkCard
-            key={bookmark.id}
-            bookmark={bookmark}
-            folders={folders}
-            onEdit={() => onEdit(bookmark)}
-            onDelete={() => onDelete(bookmark)}
-            onMoveToFolder={(folderId) => onMoveToFolder(bookmark, folderId)}
-          />
-        ))}
+        {filteredBookmarks.map((bookmark) => {
+          console.log('Rendering bookmark:', bookmark.id, 'with icon:', bookmark.icon?.substring(0, 50))
+          return (
+            <BookmarkCard
+              key={bookmark.id}
+              bookmark={bookmark}
+              folders={folders}
+              onEdit={() => onEdit(bookmark)}
+              onDelete={() => onDelete(bookmark)}
+              onMoveToFolder={(folderId) => onMoveToFolder(bookmark, folderId)}
+            />
+          )
+        })
+        }
 
         {/* Add New Bookmark Card */}
         <button

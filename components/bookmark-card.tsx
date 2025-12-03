@@ -35,6 +35,8 @@ interface BookmarkCardProps {
 
 export function BookmarkCard({ bookmark, folders, onEdit, onDelete, onMoveToFolder }: BookmarkCardProps) {
   const [imageError, setImageError] = useState(false)
+  
+  console.log('BookmarkCard rendering with icon:', bookmark.icon?.substring(0, 50))
 
   const handleClick = () => {
     window.open(bookmark.url, "_blank")
@@ -149,6 +151,7 @@ export function BookmarkCard({ bookmark, folders, onEdit, onDelete, onMoveToFold
                   alt={bookmark.title}
                   className="h-9 w-9 object-contain"
                   onError={() => setImageError(true)}
+                  onLoad={() => console.log('Icon loaded successfully:', bookmark.icon?.substring(0, 50))}
                 />
               ) : (
                 <div

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
@@ -34,22 +34,42 @@ export function CustomIconEditor({ onIconChange, initialIcon, initialTitle }: Cu
   const [iconText, setIconText] = useState(initialTitle?.slice(0, 2).toUpperCase() || "")
   const [isCustom, setIsCustom] = useState(false)
 
+  // 检查初始图标是否是自定义图标
+  useEffect(() => {
+    if (initialIcon && initialIcon.startsWith("data:image/svg+xml")) {
+      setIsCustom(true)
+    }
+  }, [initialIcon])
+
   // 生成自定义图标
   const generateCustomIcon = () => {
-    // 简单的 SVG 数据 URL 生成
-    const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
-      <rect width="128" height="128" fill="${backgroundColor}" rx="24" />
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+      <rect width="128" height="128" fill="${backgroundColor}" rx="24"/>
       <text x="64" y="80" font-family="Arial, sans-serif" font-size="48" font-weight="bold" text-anchor="middle" fill="white">${iconText}</text>
     </svg>`
     
-    const encodedSvg = encodeURIComponent(svgContent)
-    return `data:image/svg+xml;utf8,${encodedSvg}`
+    // 使用更紧凑的base64编码
+    try {
+      const base64Data = `data:image/svg+xml;base64,${btoa(svg)}`
+      console.log('Generated icon data length:', base64Data.length)
+      console.log('Generated icon data preview:', base64Data.substring(0, 100) + '...')
+      return base64Data
+    } catch (error) {
+      console.error('Error generating base64:', error)
+      // 如果base64失败，使用utf8编码
+      const encodedSvg = encodeURIComponent(svg)
+      const utf8Data = `data:image/svg+xml;utf8,${encodedSvg}`
+      console.log('Using UTF8 encoding, length:', utf8Data.length)
+      return utf8Data
+    }
   }
 
   // 应用自定义图标
   const applyCustomIcon = () => {
     if (!iconText) return
     const customIcon = generateCustomIcon()
+    console.log('applyCustomIcon called with:', iconText, backgroundColor)
+    console.log('Generated icon data:', customIcon?.substring(0, 100))
     onIconChange(customIcon)
     setIsCustom(true)
   }
@@ -60,21 +80,17 @@ export function CustomIconEditor({ onIconChange, initialIcon, initialTitle }: Cu
     setIsCustom(false)
   }
 
-  // 处理颜色选择
+  // 处理颜色选择 - 不再自动应用，需要手动点击应用按钮
   const handleColorSelect = (color: string) => {
     setBackgroundColor(color)
-    if (isCustom && iconText) {
-      applyCustomIcon()
-    }
+    // 移除自动应用功能，用户必须手动点击"应用"按钮
   }
 
-  // 处理文字输入
+  // 处理文字输入 - 不再自动应用，需要手动点击应用按钮
   const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const text = e.target.value.slice(0, 2).toUpperCase()
     setIconText(text)
-    if (isCustom && text) {
-      applyCustomIcon()
-    }
+    // 移除自动应用功能，用户必须手动点击"应用"按钮
   }
 
   return (
@@ -86,7 +102,12 @@ export function CustomIconEditor({ onIconChange, initialIcon, initialTitle }: Cu
             variant="ghost"
             size="sm"
             className="h-7 text-sm"
-            onClick={clearCustomIcon}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              clearCustomIcon()
+            }}
+            type="button"
           >
             清除
           </Button>
@@ -98,7 +119,7 @@ export function CustomIconEditor({ onIconChange, initialIcon, initialTitle }: Cu
         <div className="h-12 w-12 rounded-xl bg-muted flex items-center justify-center border overflow-hidden shadow-sm">
           {isCustom && (
             <img
-              src={initialIcon || generateCustomIcon()}
+              src={generateCustomIcon()}
               alt="Custom Icon"
               className="h-full w-full object-contain"
             />
@@ -119,8 +140,13 @@ export function CustomIconEditor({ onIconChange, initialIcon, initialTitle }: Cu
                 variant="default"
                 size="sm"
                 className="h-7 text-sm"
-                onClick={applyCustomIcon}
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  applyCustomIcon()
+                }}
                 disabled={!iconText}
+                type="button"
               >
                 应用
               </Button>
@@ -147,15 +173,20 @@ export function CustomIconEditor({ onIconChange, initialIcon, initialTitle }: Cu
               key={color}
               className={`h-8 rounded border-2 ${backgroundColor === color ? "border-primary ring-2 ring-primary/50" : "border-transparent hover:border-primary/50"}`}
               style={{ backgroundColor: color }}
-              onClick={() => handleColorSelect(color)}
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                handleColorSelect(color)
+              }}
               aria-label={`选择颜色 ${color}`}
+              type="button"
             />
           ))}
         </div>
         <div className="mt-2">
           <HexColorInput
             value={backgroundColor}
-            onChange={setBackgroundColor}
+            onChange={(color) => setBackgroundColor(color)}
             label="自定义颜色"
           />
         </div>

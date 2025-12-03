@@ -40,7 +40,27 @@ export function DashboardContent({ user }: DashboardContentProps) {
   const [currentSearchEngine, setCurrentSearchEngine] = useState<SearchEngine | null>(null)
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null)
 
-  const { data: bookmarks = [], isLoading: bookmarksLoading } = useSWR<Bookmark[]>("bookmarks", fetcher)
+  const { data: bookmarks = [], error: bookmarksError, isLoading: bookmarksLoading, mutate: bookmarksMutate } = useSWR<Bookmark[]>("bookmarks", fetcher, { refreshInterval: 30000, revalidateOnFocus: true })
+  
+  // 检查书签数据中的图标信息
+  useEffect(() => {
+    if (bookmarks && bookmarks.length > 0) {
+      console.log('=== BOOKMARKS DATA CHECK ===')
+      console.log('Total bookmarks:', bookmarks.length)
+      bookmarks.forEach((bookmark, index) => {
+        if (bookmark.icon) {
+          console.log(`Bookmark ${index}:`, {
+            id: bookmark.id,
+            title: bookmark.title,
+            iconLength: bookmark.icon.length,
+            iconPreview: bookmark.icon.substring(0, 50),
+            isDataUrl: bookmark.icon.startsWith('data:')
+          })
+        }
+      })
+      console.log('=== END BOOKMARKS CHECK ===')
+    }
+  }, [bookmarks])
   const { data: folders = [], isLoading: foldersLoading } = useSWR<Folder[]>("folders", fetcher)
   const { data: searchEngines = [], isLoading: enginesLoading } = useSWR<SearchEngine[]>("search_engines", fetcher)
 
@@ -248,7 +268,11 @@ export function DashboardContent({ user }: DashboardContentProps) {
           open={!!editingBookmark}
           onOpenChange={(open) => !open && setEditingBookmark(null)}
           onSuccess={() => {
-            mutate("bookmarks")
+            console.log('EditBookmarkDialog onSuccess called, refreshing bookmarks')
+            setTimeout(() => {
+              bookmarksMutate()
+              console.log('bookmarksMutate called after timeout')
+            }, 500)
             setEditingBookmark(null)
           }}
         />

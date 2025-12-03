@@ -32,7 +32,9 @@ export function HexColorInput({ value, onChange, label }: HexColorInputProps) {
         <div 
           className="h-8 w-8 rounded border flex-shrink-0 cursor-pointer"
           style={{ backgroundColor: value }}
-          onClick={() => {
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
             const input = document.getElementById("hex-color") as HTMLInputElement
             input?.click()
           }}

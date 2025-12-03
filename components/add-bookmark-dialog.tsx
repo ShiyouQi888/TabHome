@@ -55,9 +55,7 @@ export function AddBookmarkDialog({
       const capitalizedTitle = generatedTitle.charAt(0).toUpperCase() + generatedTitle.slice(1)
 
       setIcon(faviconUrl)
-      if (!title) {
-        setTitle(capitalizedTitle)
-      }
+      // 移除自动填充标题的功能，必须手动输入
       setUrl(normalizedUrl)
     } catch (error) {
       console.error("Failed to fetch site info:", error)
@@ -133,7 +131,14 @@ export function AddBookmarkDialog({
                 onChange={(e) => setUrl(e.target.value)}
                 required
               />
-              <Button type="button" variant="outline" size="icon" onClick={fetchSiteInfo} disabled={!url || isFetching}>
+              <Button 
+                type="button" 
+                variant="outline" 
+                size="icon" 
+                onClick={fetchSiteInfo} 
+                disabled={!url || isFetching}
+                title="获取网站图标"
+              >
                 {isFetching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
               </Button>
             </div>
@@ -167,7 +172,7 @@ export function AddBookmarkDialog({
                     disabled={!url || isFetching}
                   >
                     {isFetching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
-                    <span className="ml-1">自动获取</span>
+                    <span className="ml-1">获取图标</span>
                   </Button>
                 </div>
                 <div className="flex gap-2 items-center">
