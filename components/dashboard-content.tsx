@@ -1,0 +1,295 @@
+"use client"
+
+import { useState, useEffect, useMemo } from "react"
+import type { User } from "@supabase/supabase-js"
+import { createClient } from "@/lib/supabase/client"
+import { SearchBar } from "@/components/search-bar"
+import { BookmarkGrid } from "@/components/bookmark-grid"
+import { DashboardHeader } from "@/components/dashboard-header"
+import { AddBookmarkDialog } from "@/components/add-bookmark-dialog"
+import { EditBookmarkDialog } from "@/components/edit-bookmark-dialog"
+import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog"
+import { SearchEngineManager } from "@/components/search-engine-manager"
+import { CategorySidebar } from "@/components/category-sidebar"
+import { MobileCategoryTabs } from "@/components/mobile-category-tabs"
+import { FolderDialog } from "@/components/folder-dialog"
+import { Footer } from "@/components/footer"
+import { type Bookmark, type SearchEngine, type Folder, DEFAULT_SEARCH_ENGINES } from "@/lib/types"
+import useSWR, { mutate } from "swr"
+
+interface DashboardContentProps {
+  user: User
+}
+
+const fetcher = async (key: string) => {
+  const supabase = createClient()
+  const { data, error } = await supabase.from(key).select("*").order("position", { ascending: true })
+  if (error) throw error
+  return data
+}
+
+export function DashboardContent({ user }: DashboardContentProps) {
+  const [showAddDialog, setShowAddDialog] = useState(false)
+  const [showSearchEngineManager, setShowSearchEngineManager] = useState(false)
+  const [showFolderDialog, setShowFolderDialog] = useState(false)
+  const [editingBookmark, setEditingBookmark] = useState<Bookmark | null>(null)
+  const [editingFolder, setEditingFolder] = useState<Folder | null>(null)
+  const [deletingBookmark, setDeletingBookmark] = useState<Bookmark | null>(null)
+  const [deletingFolder, setDeletingFolder] = useState<Folder | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [currentSearchEngine, setCurrentSearchEngine] = useState<SearchEngine | null>(null)
+  const [selectedFolder, setSelectedFolder] = useState<string | null>(null)
+
+  const { data: bookmarks = [], isLoading: bookmarksLoading } = useSWR<Bookmark[]>("bookmarks", fetcher)
+  const { data: folders = [], isLoading: foldersLoading } = useSWR<Folder[]>("folders", fetcher)
+  const { data: searchEngines = [], isLoading: enginesLoading } = useSWR<SearchEngine[]>("search_engines", fetcher)
+
+  // 计算每个分类的书签数量
+  const bookmarkCounts = useMemo(() => {
+    const counts: Record<string, number> = {}
+    bookmarks.forEach((b) => {
+      if (b.folder_id) {
+        counts[b.folder_id] = (counts[b.folder_id] || 0) + 1
+      }
+    })
+    return counts
+  }, [bookmarks])
+
+  // 初始化搜索引擎
+  useEffect(() => {
+    const initSearchEngines = async () => {
+      if (!enginesLoading && searchEngines.length === 0) {
+        const supabase = createClient()
+        const enginesToInsert = DEFAULT_SEARCH_ENGINES.map((engine, index) => ({
+          ...engine,
+          user_id: user.id,
+          position: index,
+        }))
+        await supabase.from("search_engines").insert(enginesToInsert)
+        mutate("search_engines")
+      }
+    }
+    initSearchEngines()
+  }, [enginesLoading, searchEngines.length, user.id])
+
+  // 设置当前搜索引擎
+  useEffect(() => {
+    if (searchEngines.length > 0) {
+      const defaultEngine = searchEngines.find((e) => e.is_default) || searchEngines[0]
+      setCurrentSearchEngine(defaultEngine)
+    }
+  }, [searchEngines])
+
+  const handleDeleteBookmarkRequest = (bookmark: Bookmark) => {
+    setDeletingBookmark(bookmark)
+  }
+
+  const handleDeleteBookmarkConfirm = async () => {
+    if (!deletingBookmark) return
+
+    setIsDeleting(true)
+    try {
+      const supabase = createClient()
+      await supabase.from("bookmarks").delete().eq("id", deletingBookmark.id)
+      mutate("bookmarks")
+      setDeletingBookmark(null)
+    } catch (error) {
+      console.error("Failed to delete bookmark:", error)
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  const handleDeleteFolderRequest = (folder: Folder) => {
+    setDeletingFolder(folder)
+  }
+
+  const handleDeleteFolderConfirm = async () => {
+    if (!deletingFolder) return
+
+    setIsDeleting(true)
+    try {
+      const supabase = createClient()
+      // 将该分类下的书签移到"无分类"
+      await supabase.from("bookmarks").update({ folder_id: null }).eq("folder_id", deletingFolder.id)
+      // 删除分类
+      await supabase.from("folders").delete().eq("id", deletingFolder.id)
+      mutate("bookmarks")
+      mutate("folders")
+      setDeletingFolder(null)
+      if (selectedFolder === deletingFolder.id) {
+        setSelectedFolder(null)
+      }
+    } catch (error) {
+      console.error("Failed to delete folder:", error)
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  const handleMoveToFolder = async (bookmark: Bookmark, folderId: string | null) => {
+    try {
+      const supabase = createClient()
+      await supabase
+        .from("bookmarks")
+        .update({ folder_id: folderId, updated_at: new Date().toISOString() })
+        .eq("id", bookmark.id)
+      mutate("bookmarks")
+    } catch (error) {
+      console.error("Failed to move bookmark:", error)
+    }
+  }
+
+  const handleEditFolder = (folder: Folder) => {
+    setEditingFolder(folder)
+    setShowFolderDialog(true)
+  }
+
+  const handleAddFolder = () => {
+    setEditingFolder(null)
+    setShowFolderDialog(true)
+  }
+
+  const getGreeting = () => {
+    const hour = new Date().getHours()
+    if (hour < 6) return "夜深了"
+    if (hour < 12) return "早上好"
+    if (hour < 14) return "中午好"
+    if (hour < 18) return "下午好"
+    return "晚上好"
+  }
+
+  return (
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Background decoration */}
+      <div className="fixed inset-0 -z-10 overflow-hidden">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-accent/5 rounded-full blur-3xl" />
+      </div>
+
+      <DashboardHeader
+        user={user}
+        onAddBookmark={() => setShowAddDialog(true)}
+        onAddFolder={handleAddFolder}
+        onManageSearchEngines={() => setShowSearchEngineManager(true)}
+      />
+
+      <main className="container mx-auto px-4 py-8 flex-1">
+        {/* Greeting */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl md:text-4xl font-bold mb-2">
+            <span className="gradient-text">{getGreeting()}</span>，{user.email?.split("@")[0]}
+          </h1>
+          <p className="text-muted-foreground">今天想做些什么？</p>
+        </div>
+
+        {/* Search Bar */}
+        <SearchBar
+          searchEngines={searchEngines}
+          currentEngine={currentSearchEngine}
+          onEngineChange={setCurrentSearchEngine}
+        />
+
+        {/* Mobile Category Tabs */}
+        <MobileCategoryTabs
+          folders={folders}
+          selectedFolder={selectedFolder}
+          onSelectFolder={setSelectedFolder}
+          onAddFolder={handleAddFolder}
+        />
+
+        {/* Main Content with Sidebar */}
+        <div className="flex gap-8">
+          {/* Category Sidebar (Desktop) */}
+          <CategorySidebar
+            folders={folders}
+            selectedFolder={selectedFolder}
+            onSelectFolder={setSelectedFolder}
+            onAddFolder={handleAddFolder}
+            onEditFolder={handleEditFolder}
+            onDeleteFolder={handleDeleteFolderRequest}
+            bookmarkCounts={bookmarkCounts}
+            totalBookmarks={bookmarks.length}
+          />
+
+          {/* Bookmarks Grid */}
+          <div className="flex-1 min-w-0">
+            <BookmarkGrid
+              bookmarks={bookmarks}
+              folders={folders}
+              isLoading={bookmarksLoading || foldersLoading}
+              onEdit={setEditingBookmark}
+              onDelete={handleDeleteBookmarkRequest}
+              onMoveToFolder={handleMoveToFolder}
+              onAddNew={() => setShowAddDialog(true)}
+              selectedFolder={selectedFolder}
+            />
+          </div>
+        </div>
+      </main>
+
+      {/* Footer */}
+      <Footer />
+
+      {/* Dialogs */}
+      <AddBookmarkDialog
+        open={showAddDialog}
+        onOpenChange={setShowAddDialog}
+        userId={user.id}
+        folders={folders}
+        selectedFolder={selectedFolder}
+        onSuccess={() => mutate("bookmarks")}
+      />
+
+      {editingBookmark && (
+        <EditBookmarkDialog
+          bookmark={editingBookmark}
+          folders={folders}
+          open={!!editingBookmark}
+          onOpenChange={(open) => !open && setEditingBookmark(null)}
+          onSuccess={() => {
+            mutate("bookmarks")
+            setEditingBookmark(null)
+          }}
+        />
+      )}
+
+      <DeleteConfirmDialog
+        open={!!deletingBookmark}
+        onOpenChange={(open) => !open && setDeletingBookmark(null)}
+        title="删除书签"
+        description={`确定要删除书签 "${deletingBookmark?.title}" 吗？此操作无法撤销。`}
+        onConfirm={handleDeleteBookmarkConfirm}
+        isLoading={isDeleting}
+      />
+
+      <DeleteConfirmDialog
+        open={!!deletingFolder}
+        onOpenChange={(open) => !open && setDeletingFolder(null)}
+        title="删除分类"
+        description={`确定要删除分类 "${deletingFolder?.name}" 吗？该分类下的书签将移到"无分类"。`}
+        onConfirm={handleDeleteFolderConfirm}
+        isLoading={isDeleting}
+      />
+
+      <FolderDialog
+        open={showFolderDialog}
+        onOpenChange={setShowFolderDialog}
+        userId={user.id}
+        folder={editingFolder}
+        onSuccess={() => {
+          mutate("folders")
+          setEditingFolder(null)
+        }}
+      />
+
+      <SearchEngineManager
+        open={showSearchEngineManager}
+        onOpenChange={setShowSearchEngineManager}
+        searchEngines={searchEngines}
+        userId={user.id}
+        onSuccess={() => mutate("search_engines")}
+      />
+    </div>
+  )
+}
