@@ -1,0 +1,52 @@
+{
+  "manifest_version": 3,
+  "name": "TabHome - 浏览器主页",
+  "version": "1.0.0",
+  "description": "TabHome浏览器扩展，管理您的书签",
+  "permissions": [
+    "activeTab",
+    "alarms",
+    "bookmarks",
+    "storage",
+    "tabs",
+    "https://*.supabase.co/*"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.svg",
+      "48": "icons/icon48.svg",
+      "128": "icons/icon128.svg"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.svg",
+    "48": "icons/icon48.svg",
+    "128": "icons/icon128.svg"
+  },
+  "options_page": "options.html",
+  "web_accessible_resources": [
+    {
+      "resources": ["popup/popup.html"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "chrome_settings_overrides": {
+    "homepage": "https://tabhome.netlify.app"
+  },
+  "chrome_url_overrides": {
+    "newtab": "newtab.html"
+  }
+}

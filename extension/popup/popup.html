@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TabHome 浏览器扩展</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <header class="header">
+      <div class="logo">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="16"></line>
+          <line x1="8" y1="12" x2="16" y2="12"></line>
+        </svg>
+        <h1 class="title">TabHome</h1>
+      </div>
+      <div class="header-actions">
+        <button id="loginBtn" class="btn btn-primary">登录</button>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <!-- 登录状态下显示 -->
+      <div id="loggedInView" class="hidden">
+        <div class="search-container">
+          <input type="text" id="searchInput" placeholder="搜索书签..." class="search-input">
+        </div>
+
+        <div class="folder-tabs">
+          <button class="tab-btn active" data-folder="all">全部</button>
+          <div id="folderTabsContainer" class="folder-tabs-list"></div>
+        </div>
+
+        <div id="bookmarksGrid" class="bookmarks-grid">
+          <!-- 书签将通过JS动态加载 -->
+        </div>
+
+        <div class="add-bookmark-btn">
+          <button id="addBookmarkBtn" class="btn btn-primary btn-large">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            添加书签
+          </button>
+        </div>
+      </div>
+
+      <!-- 未登录状态下显示 -->
+      <div id="loggedOutView" class="logged-out-view">
+        <div class="welcome-message">
+          <h2>欢迎使用 TabHome</h2>
+          <p>登录后即可同步和管理您的书签</p>
+        </div>
+        <div class="login-actions">
+          <button id="loginWithEmail" class="btn btn-primary btn-block">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+            </svg>
+            邮箱登录
+          </button>
+          <p class="divider">或</p>
+          <button id="loginWithGithub" class="btn btn-secondary btn-block">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+            </svg>
+            GitHub登录
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <p class="version">v1.0.0</p>
+      <div class="footer-links">
+        <a href="#" id="openOptions" class="link">设置</a>
+        <a href="https://tabhome.netlify.app" target="_blank" class="link">官网</a>
+        <a href="https://tabhome.netlify.app/terms" target="_blank" class="link">使用条款</a>
+      </div>
+    </footer>
+  </div>
+
+  <!-- 添加书签模态框 -->
+  <div id="addBookmarkModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>添加书签</h2>
+        <button id="closeModal" class="modal-close">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="addBookmarkForm">
+          <div class="form-group">
+            <label for="bookmarkUrl">URL</label>
+            <input type="url" id="bookmarkUrl" name="url" placeholder="https://example.com" required class="form-input">
+          </div>
+          <div class="form-group">
+            <label for="bookmarkTitle">标题</label>
+            <input type="text" id="bookmarkTitle" name="title" placeholder="网站标题" class="form-input">
+          </div>
+          <div class="form-group">
+            <label for="bookmarkFolder">文件夹</label>
+            <select id="bookmarkFolder" name="folderId" class="form-select">
+              <option value="">无分类</option>
+              <!-- 文件夹将通过JS动态加载 -->
+            </select>
+          </div>
+          <div class="form-actions">
+            <button type="button" id="cancelAdd" class="btn btn-secondary">取消</button>
+            <button type="submit" class="btn btn-primary">添加</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

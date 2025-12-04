@@ -5,6 +5,7 @@ import type { User } from "@supabase/supabase-js"
 import { createClient } from "@/lib/supabase/client"
 import { SearchBar } from "@/components/search-bar"
 import { BookmarkGrid } from "@/components/bookmark-grid"
+import { TabGrid } from "@/components/tab-grid"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { AddBookmarkDialog } from "@/components/add-bookmark-dialog"
 import { EditBookmarkDialog } from "@/components/edit-bookmark-dialog"
@@ -46,6 +47,7 @@ export function DashboardContent({ user }: DashboardContentProps) {
   const [isDeleting, setIsDeleting] = useState(false)
   const [currentSearchEngine, setCurrentSearchEngine] = useState<SearchEngine | null>(null)
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null)
+  const [viewMode, setViewMode] = useState<"bookmarks" | "tabs">("bookmarks")
 
   const { data: bookmarks = [], error: bookmarksError, isLoading: bookmarksLoading, mutate: bookmarksMutate } = useSWR<Bookmark[]>(["bookmarks", user.id], ([key, userId]) => fetcher(key, userId), { refreshInterval: 30000, revalidateOnFocus: true })
   
@@ -314,19 +316,69 @@ export function DashboardContent({ user }: DashboardContentProps) {
             onAddFolder={handleAddFolder}
           />
 
-          {/* Bookmarks Grid */}
-          <div className="pt-6">
-            <BookmarkGrid
-              bookmarks={bookmarks}
-              folders={folders}
-              isLoading={bookmarksLoading || foldersLoading}
-              onEdit={setEditingBookmark}
-              onDelete={handleDeleteBookmarkRequest}
-              onMoveToFolder={handleMoveToFolder}
-              onAddNew={() => setShowAddDialog(true)}
-              selectedFolder={selectedFolder}
-            />
+          {/* View Mode Toggle */}
+          <div className="flex justify-center mb-6">
+            <div className="inline-flex bg-muted rounded-lg p-1">
+              <button
+                onClick={() => setViewMode("bookmarks")}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  viewMode === "bookmarks"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                书签管理
+              </button>
+              <button
+                onClick={() => setViewMode("tabs")}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  viewMode === "tabs"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                标签页视图
+              </button>
+            </div>
           </div>
+
+          {/* Content based on view mode */}
+          {viewMode === "bookmarks" ? (
+            /* Bookmarks Grid */
+            <div className="pt-6">
+              <BookmarkGrid
+                bookmarks={bookmarks}
+                folders={folders}
+                isLoading={bookmarksLoading || foldersLoading}
+                onEdit={setEditingBookmark}
+                onDelete={handleDeleteBookmarkRequest}
+                onMoveToFolder={handleMoveToFolder}
+                onAddNew={() => setShowAddDialog(true)}
+                selectedFolder={selectedFolder}
+              />
+            </div>
+          ) : (
+            /* Tab Page View */
+            <div className="pt-6">
+              <div className="text-center mb-8">
+                <h2 className="text-2xl font-bold mb-2">我的标签页</h2>
+                <p className="text-muted-foreground">快速访问您常用的网站</p>
+              </div>
+              <TabGrid
+                bookmarks={bookmarks}
+                folders={folders}
+                isLoading={bookmarksLoading || foldersLoading}
+                onAddBookmark={() => setShowAddDialog(true)}
+                onEditBookmark={setEditingBookmark}
+                onDeleteBookmark={handleDeleteBookmarkRequest}
+                onRefresh={() => {
+                  mutate(["bookmarks", user.id])
+                  mutate(["folders", user.id])
+                }}
+                selectedFolder={selectedFolder}
+              />
+            </div>
+          )}
         </main>
       </div>
 
