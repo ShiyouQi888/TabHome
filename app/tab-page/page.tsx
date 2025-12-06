@@ -7,7 +7,7 @@ import { EditBookmarkDialog } from "@/components/edit-bookmark-dialog"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Bookmark, Grid3x3, Settings, Search } from "lucide-react"
+import { Bookmark, Grid3x3, Settings, Search, Plus } from "lucide-react"
 import useSWR from "swr"
 import { fetcher } from "@/lib/fetcher"
 import type { Bookmark as BookmarkType, Folder, UserSettings } from "@/lib/types"
@@ -203,7 +203,48 @@ export default function TabPage() {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {filteredBookmarks.map((bookmark) => (
+                  {/* 过滤书签 */}
+                  {selectedFolder 
+                    ? bookmarks.filter(bookmark => bookmark.folder_id === selectedFolder).map((bookmark) => (
+                    <div
+                      key={bookmark.id}
+                      className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={bookmark.icon || `https://www.google.com/s2/favicons?domain=${new URL(bookmark.url).hostname}`}
+                          alt=""
+                          className="w-4 h-4 rounded"
+                          crossOrigin="anonymous"
+                          referrerPolicy="no-referrer"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none'
+                          }}
+                        />
+                        <div>
+                          <h3 className="font-medium">{bookmark.title}</h3>
+                          <p className="text-sm text-muted-foreground">{bookmark.url}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEditBookmark(bookmark)}
+                        >
+                          编辑
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteBookmark(bookmark.id)}
+                        >
+                          删除
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                  : bookmarks.map((bookmark) => (
                     <div
                       key={bookmark.id}
                       className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors"

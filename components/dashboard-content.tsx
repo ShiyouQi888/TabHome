@@ -13,6 +13,7 @@ import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog"
 import { SearchEngineManager } from "@/components/search-engine-manager"
 import { CategorySidebar } from "@/components/category-sidebar"
 import { MobileCategoryTabs } from "@/components/mobile-category-tabs"
+import { DesktopCategoryTabs } from "@/components/desktop-category-tabs"
 import { FolderDialog } from "@/components/folder-dialog"
 import { Footer } from "@/components/footer"
 import { type Bookmark, type SearchEngine, type Folder, DEFAULT_SEARCH_ENGINES } from "@/lib/types"
@@ -279,18 +280,6 @@ export function DashboardContent({ user }: DashboardContentProps) {
       />
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Category Sidebar (Desktop) - Fixed on left */}
-        <CategorySidebar
-          folders={folders}
-          selectedFolder={selectedFolder}
-          onSelectFolder={setSelectedFolder}
-          onAddFolder={handleAddFolder}
-          onEditFolder={handleEditFolder}
-          onDeleteFolder={handleDeleteFolderRequest}
-          bookmarkCounts={bookmarkCounts}
-          totalBookmarks={bookmarks.length}
-        />
-
         {/* Main Content Area */}
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
           {/* Greeting */}
@@ -308,13 +297,32 @@ export function DashboardContent({ user }: DashboardContentProps) {
             onEngineChange={setCurrentSearchEngine}
           />
 
-          {/* Mobile Category Tabs */}
-          <MobileCategoryTabs
-            folders={folders}
-            selectedFolder={selectedFolder}
-            onSelectFolder={setSelectedFolder}
-            onAddFolder={handleAddFolder}
-          />
+          {/* Category Section - Fixed below search bar */}
+          <div className="mb-6">
+            {/* Desktop Category Tabs */}
+            <div className="hidden lg:block">
+              <DesktopCategoryTabs
+                folders={folders}
+                selectedFolder={selectedFolder}
+                onSelectFolder={setSelectedFolder}
+                onAddFolder={handleAddFolder}
+                onEditFolder={handleEditFolder}
+                onDeleteFolder={handleDeleteFolderRequest}
+                bookmarkCounts={bookmarkCounts}
+                totalBookmarks={bookmarks.length}
+              />
+            </div>
+            
+            {/* Mobile Category Tabs - Always visible */}
+            <div className="lg:hidden">
+              <MobileCategoryTabs
+                folders={folders}
+                selectedFolder={selectedFolder}
+                onSelectFolder={setSelectedFolder}
+                onAddFolder={handleAddFolder}
+              />
+            </div>
+          </div>
 
           {/* View Mode Toggle */}
           <div className="flex justify-center mb-6">

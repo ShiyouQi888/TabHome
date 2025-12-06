@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Edit, Trash2, ExternalLink, MoreVertical, Copy, FolderInput, FolderIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { BookmarkIcon } from "./bookmark-icon"
 
 interface BookmarkCardProps {
   bookmark: Bookmark
@@ -34,8 +35,6 @@ interface BookmarkCardProps {
 }
 
 export function BookmarkCard({ bookmark, folders, onEdit, onDelete, onMoveToFolder }: BookmarkCardProps) {
-  const [imageError, setImageError] = useState(false)
-  
   console.log('BookmarkCard rendering with icon:', bookmark.icon?.substring(0, 50))
 
   const handleClick = () => {
@@ -44,25 +43,6 @@ export function BookmarkCard({ bookmark, folders, onEdit, onDelete, onMoveToFold
 
   const handleCopyUrl = () => {
     navigator.clipboard.writeText(bookmark.url)
-  }
-
-  const getInitials = (title: string) => {
-    return title.charAt(0).toUpperCase()
-  }
-
-  const getGradientFromTitle = (title: string) => {
-    const gradients = [
-      "from-rose-500 to-pink-500",
-      "from-orange-500 to-amber-500",
-      "from-emerald-500 to-teal-500",
-      "from-cyan-500 to-blue-500",
-      "from-blue-500 to-indigo-500",
-      "from-violet-500 to-purple-500",
-      "from-fuchsia-500 to-pink-500",
-      "from-lime-500 to-green-500",
-    ]
-    const index = title.charCodeAt(0) % gradients.length
-    return gradients[index]
   }
 
   const currentFolder = folders.find((f) => f.id === bookmark.folder_id)
@@ -145,21 +125,12 @@ export function BookmarkCard({ bookmark, folders, onEdit, onDelete, onMoveToFold
 
           <button onClick={handleClick} className="flex flex-col items-center gap-1.5 w-full">
             <div className="relative flex h-14 w-14 items-center justify-center rounded-xl overflow-hidden shadow-sm dark:shadow-primary/5 group-hover:scale-105 group-hover:shadow-md dark:group-hover:shadow-primary/15 transition-all duration-300 bg-card/50 dark:bg-card/80 border border-border/30 dark:border-border/50">
-              {bookmark.icon && !imageError ? (
-                <img
-                  src={bookmark.icon || "/placeholder.svg"}
-                  alt={bookmark.title}
-                  className="h-9 w-9 object-contain"
-                  onError={() => setImageError(true)}
-                  onLoad={() => console.log('Icon loaded successfully:', bookmark.icon?.substring(0, 50))}
-                />
-              ) : (
-                <div
-                  className={`flex h-full w-full items-center justify-center text-white font-semibold text-xl bg-gradient-to-br ${getGradientFromTitle(bookmark.title)}`}
-                >
-                  {getInitials(bookmark.title)}
-                </div>
-              )}
+              <BookmarkIcon 
+                title={bookmark.title} 
+                iconUrl={bookmark.icon} 
+                size="md" 
+                onLoad={() => console.log('Icon loaded successfully:', bookmark.icon?.substring(0, 50))} 
+              />
             </div>
             <span className="text-xs text-center line-clamp-2 text-foreground opacity-85 group-hover:opacity-100 transition-opacity max-w-[110px] font-medium">
               {bookmark.title}

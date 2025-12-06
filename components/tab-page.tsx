@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Bookmark, MoreVertical, Edit, Trash2, ExternalLink } from "lucide-react"
+import { MoreVertical, Edit, Trash2, ExternalLink } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils"
 import type { Bookmark as BookmarkType } from "@/lib/types"
 import { EditBookmarkDialog } from "./edit-bookmark-dialog"
 import { DeleteConfirmDialog } from "./delete-confirm-dialog"
+import { BookmarkIcon } from "./bookmark-icon"
 
 interface TabPageProps {
   bookmark: BookmarkType
@@ -65,36 +66,14 @@ export function TabPage({ bookmark, onEdit, onDelete, onRefresh }: TabPageProps)
         )}
         onClick={handleClick}
       >
-        {/* 图标 */}
+        {/* 图标 - 使用可复用组件 */}
         <div className="mb-3 flex items-center justify-center">
-          {bookmark.icon ? (
-            <img
-              src={bookmark.icon}
-              alt={bookmark.title}
-              className="h-8 w-8 rounded-lg object-contain"
-              crossOrigin="anonymous"
-              referrerPolicy="no-referrer"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement
-                target.style.display = "none"
-                const fallback = target.nextElementSibling as HTMLElement
-                if (fallback) fallback.style.display = "flex"
-              }}
-              onLoad={(e) => {
-                const target = e.target as HTMLImageElement
-                const fallback = target.nextElementSibling as HTMLElement
-                if (fallback) fallback.style.display = "none"
-              }}
-            />
-          ) : null}
-          <div
-            className={cn(
-              "h-8 w-8 rounded-lg bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center",
-              bookmark.icon ? "hidden" : "flex"
-            )}
-          >
-            <Bookmark className="h-4 w-4 text-primary" />
-          </div>
+          <BookmarkIcon 
+            title={bookmark.title} 
+            iconUrl={bookmark.icon} 
+            size="sm" 
+            className="h-8 w-8" 
+          />
         </div>
 
         {/* 标题 */}
@@ -111,37 +90,60 @@ export function TabPage({ bookmark, onEdit, onDelete, onRefresh }: TabPageProps)
           </p>
         </div>
 
-        {/* 操作按钮 */}
-        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        {/* 操作按钮 - 增强版 */}
+        <div className="absolute top-2 right-2 z-20 opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 bg-background/80 backdrop-blur-sm border border-border/50"
-                onClick={(e) => e.stopPropagation()}
+                className="h-8 w-8 rounded-full bg-background/90 backdrop-blur-sm border border-border/60 hover:bg-background/100 shadow-sm focus:opacity-100 focus:scale-110"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  e.preventDefault()
+                }}
+                onMouseEnter={(e) => {
+                  // 确保按钮在悬停时可见
+                  e.currentTarget.style.opacity = '1'
+                }}
+                onMouseLeave={(e) => {
+                  // 鼠标离开时恢复悬停效果
+                  if (!e.currentTarget.matches(':focus')) {
+                    e.currentTarget.style.opacity = ''
+                  }
+                }}
               >
-                <MoreVertical className="h-4 w-4" />
+                <MoreVertical className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40">
-              <DropdownMenuItem onClick={(e) => {
-                e.stopPropagation()
-                window.open(bookmark.url, '_blank')
-              }}>
+            <DropdownMenuContent 
+              align="end" 
+              className="w-40 z-30"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <DropdownMenuItem 
+                onClick={(e) => {
+                  e.stopPropagation()
+                  window.open(bookmark.url, '_blank')
+                }}
+                className="cursor-pointer"
+              >
                 <ExternalLink className="mr-2 h-4 w-4" />
                 在新标签页打开
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={(e) => {
-                e.stopPropagation()
-                handleEdit()
-              }}>
+              <DropdownMenuItem 
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleEdit()
+                }}
+                className="cursor-pointer"
+              >
                 <Edit className="mr-2 h-4 w-4" />
                 编辑
               </DropdownMenuItem>
               <DropdownMenuItem
-                className="text-destructive"
+                className="text-destructive cursor-pointer"
                 onClick={(e) => {
                   e.stopPropagation()
                   handleDelete()

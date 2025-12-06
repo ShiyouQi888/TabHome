@@ -54,7 +54,7 @@ export function MobileCategoryTabs({ folders, selectedFolder, onSelectFolder, on
           <button
             onClick={() => onSelectFolder(null)}
             className={cn(
-              "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all flex-shrink-0",
+              "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all flex-shrink-0",
               selectedFolder === null
                 ? "bg-primary text-primary-foreground shadow-md"
                 : "bg-muted text-muted-foreground hover:bg-muted/80",
@@ -72,7 +72,7 @@ export function MobileCategoryTabs({ folders, selectedFolder, onSelectFolder, on
                 key={folder.id}
                 onClick={() => onSelectFolder(folder.id)}
                 className={cn(
-                  "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all flex-shrink-0",
+                  "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all flex-shrink-0",
                   selectedFolder === folder.id
                     ? "bg-primary text-primary-foreground shadow-md"
                     : "bg-muted text-muted-foreground hover:bg-muted/80",
@@ -91,7 +91,7 @@ export function MobileCategoryTabs({ folders, selectedFolder, onSelectFolder, on
           <Button
             variant="outline"
             size="sm"
-            className="rounded-full flex-shrink-0 bg-transparent"
+            className="rounded-lg flex-shrink-0 bg-transparent"
             onClick={onAddFolder}
           >
             <Plus className="h-4 w-4 mr-1" />
